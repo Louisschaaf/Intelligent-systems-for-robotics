@@ -1,0 +1,46 @@
+#VRML_SIM R2025a utf8
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/Floor.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/pal_robotics/tiago/protos/Tiago.proto"
+
+WorldInfo { }
+
+Viewpoint {
+  orientation -0.5773 0.5773 0.5773 2.0944
+  position 0 0 10
+}
+
+TexturedBackground { }
+TexturedBackgroundLight { }
+
+# Vloer (botsingsvlak)
+Floor {
+  size 10 10
+  # appearance weggelaten om missing PROTO te vermijden
+}
+
+# Doel/agent om te volgen
+DEF TARGET Solid {
+  translation 1 0 0
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 1 0 0
+        roughness 1
+      }
+      geometry Box { size 0.20 0.20 0.20 }
+    }
+  ]
+  boundingObject Box { size 0.20 0.20 0.20 }
+  physics Physics { }
+}
+
+# TIAGo-robot (supervisor voor ground-truth)
+Tiago {
+  translation 0 0.05 0
+  rotation 0 1 0 0
+  controller "tiago_controller"
+  supervisor TRUE
+  controllerArgs [ ]
+}

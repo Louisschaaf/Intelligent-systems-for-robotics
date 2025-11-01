@@ -1,0 +1,46 @@
+# --- Algemene systeembestanden ---
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.tmp
+*.swp
+
+# --- Virtuele omgeving ---
+webots_env/
+venv/
+.env/
+.venv/
+
+# --- VS Code en IDE ---
+.vscode/
+.idea/
+
+# --- Webots gerelateerde bestanden ---
+# Cache, autosave, output, tijdelijke worlds en controllers
+*.wbo
+*.bak
+*.autosave
+*.old
+*.tmp
+*.dmp
+projects/*/controllers/*/build/
+projects/*/controllers/*/compiled/
+projects/*/controllers/*/*.exe
+projects/*/controllers/*/*.dll
+projects/*/controllers/*/*.so
+projects/*/controllers/*/*.o
+webots.log
+webots-crash.txt
+
+# --- Python build en dependency mappen ---
+build/
+dist/
+*.egg-info/
+
+# --- Overige lokale bestanden ---
+output/
+logs/
