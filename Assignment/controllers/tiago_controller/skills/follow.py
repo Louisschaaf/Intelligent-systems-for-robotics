@@ -1,10 +1,13 @@
 import math
 from controller import Supervisor, Motor
+from knowledge.kg import KG
 
 class FollowSkill:
-    def __init__(self, robot: Supervisor, target_def="TARGET"):
+    def __init__(self, robot: Supervisor, kg: KG, target_def="TARGET"):
         self.robot = robot
         self.target_def = target_def
+        self.kg = kg
+        self.last_room = "None"
 
         # Tunables
         self.stop_distance = 0.35
@@ -44,7 +47,14 @@ class FollowSkill:
         rpos = self.me.getPosition()          # [x,y,z]
         rrot = self.me.getOrientation()       # 3x3 rotatiematrix (list[9])
         yaw = self._yaw_from_R(rrot)
-
+        
+        # transmit ground-truth pos
+        current_room = self.kg.map_position_to_area(rpos)
+        if current_room != self.last_room:
+            self.kg.assert_robot_at("tiago", current_room)
+            self.last_room = current_room
+            print(current_room)
+        
         # Targetpose
         tpos = self.target.getPosition()
 

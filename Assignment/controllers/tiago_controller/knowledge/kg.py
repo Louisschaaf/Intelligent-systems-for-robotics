@@ -1,6 +1,13 @@
 from rdflib import Graph, Namespace, Literal, RDF, URIRef
 
 HOME = Namespace("http://example.org/home#")
+# hardcoded room bounds
+AREAS = {
+    "room1": {"x": (-5.0, 0.0), "z": (0.0, 5.0)},    # NW
+    "room2": {"x": (0.0, 5.0), "z": (0.0, 5.0)},     # NE
+    "room3": {"x": (-5.0, 0.0), "z": (-5.0, 0.0)},   # SW
+    "room4": {"x": (0.0, 5.0), "z": (-5.0, 0.0)},    # SE
+}
 
 class KG:
     def __init__(self):
@@ -16,11 +23,42 @@ class KG:
         i = URIRef(HOME[item]); p = URIRef(HOME[place])
         self.g.add((i, RDF.type, HOME.Item))
         self.g.set((i, HOME.at, p))
+    
+    def assert_on(self, item, support):
+        i = HOME[item]
+        s = HOME[support]
+        self.g.add((s, RDF.type, HOME.Support))
+        self.g.set((i, HOME.on, s))
+    
+    def get_robot_location(self, robot="tiago"):
+        q = f"""
+        SELECT ?place WHERE {{
+            home:{robot} home:at ?place .
+        }}
+        """
+        res = self.g.query(q, initNs={"home": HOME})
+        for row in res:
+            return str(row.place).split("#")[-1]
+        return None
+      
+    def map_position_to_area(self, pos):
+        x, _, z = pos
+        for area, bounds in AREAS.items():
+            if bounds["x"][0] <= x <= bounds["x"][1] and bounds["z"][0] <= z <= bounds["z"][1]:
+                return area
+        return "unknown"
+
 
     def to_pddl_init(self):
-        # voorbeeldje hoe je later PDDL init kunt genereren
         inits = []
         for s, p, o in self.g:
-            if p == HOME.at and (str(s).endswith("Robot")):
-                inits.append(f"(at tiago base)")
+            s_name = str(s).split("#")[-1]
+            p_name = str(p).split("#")[-1]
+            o_name = str(o).split("#")[-1]
+    
+            if p_name == "at":
+                inits.append(f"(at {s_name} {o_name})")
+            elif p_name == "on":
+                inits.append(f"(on {s_name} {o_name})")
+    
         return inits
