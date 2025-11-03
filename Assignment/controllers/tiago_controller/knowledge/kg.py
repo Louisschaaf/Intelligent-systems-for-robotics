@@ -3,10 +3,10 @@ from rdflib import Graph, Namespace, Literal, RDF, URIRef
 HOME = Namespace("http://example.org/home#")
 # hardcoded room bounds
 AREAS = {
-    "room1": {"x": (-5.0, 0.0), "z": (0.0, 5.0)},    # NW
-    "room2": {"x": (0.0, 5.0), "z": (0.0, 5.0)},     # NE
-    "room3": {"x": (-5.0, 0.0), "z": (-5.0, 0.0)},   # SW
-    "room4": {"x": (0.0, 5.0), "z": (-5.0, 0.0)},    # SE
+    "room1": {"x": (-5, 0.0), "y": (0.0, 5)},    # NW
+    "room2": {"x": (0.0, 5), "y": (0.0, 5)},     # NE
+    "room3": {"x": (-5, 0.0), "y": (-5, 0.0)},   # SW
+    "room4": {"x": (0.0, 5), "y": (-5, 0.0)},    # SE
 }
 
 class KG:
@@ -42,9 +42,9 @@ class KG:
         return None
       
     def map_position_to_area(self, pos):
-        x, _, z = pos
+        x, y, z = pos
         for area, bounds in AREAS.items():
-            if bounds["x"][0] <= x <= bounds["x"][1] and bounds["z"][0] <= z <= bounds["z"][1]:
+            if bounds["x"][0] <= x <= bounds["x"][1] and bounds["y"][0] <= y <= bounds["y"][1]:
                 return area
         return "unknown"
 

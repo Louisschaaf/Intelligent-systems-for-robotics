@@ -1,11 +1,14 @@
 from controller import Supervisor
 from skills.follow import FollowSkill
 from knowledge.kg import KG
+from perception.detect import CameraDetection
 
 def main():
     robot = Supervisor()
     timestep = int(robot.getBasicTimeStep())
     kg = KG()
+    camera = CameraDetection(robot, "Astra")
+    camera.enable(timestep)
 
     # TIAGo moet supervisor zijn in je .wbt
     me = robot.getSelf()
@@ -17,7 +20,11 @@ def main():
     skill.setup()
 
     while robot.step(timestep) != -1:
+        camera.get_image()
         skill.step()
+        detection = camera.detect_object("chair")
+        if detection:
+            print("Gevonden stoel:", detection)
 
 if __name__ == "__main__":
     main()
