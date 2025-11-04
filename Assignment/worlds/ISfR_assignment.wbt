@@ -28,16 +28,13 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/hospital/protos/EmergencyExitSign.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/stairs/protos/StraightStairsRail.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/stairs/protos/StraightStairs.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/Floor.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/pal_robotics/tiago/protos/Tiago.proto"
 
 WorldInfo {
 }
 Viewpoint {
-  orientation 0.20991621131898758 0.5790357422816553 -0.7878152025607368 0.8625410243080257
-  position -8.260560401077061 1.3505004847514672 6.417126969690869
+  orientation -0.47514585103058726 -0.031603448163928564 0.8793393214866313 3.258440754407788
+  position 11.89659216220249 -2.936617676071333 20.02935002078908
 }
 TexturedBackground {
   texture "empty_office"
@@ -53,16 +50,54 @@ PointLight {
   intensity 9.6
   location 5 6 5
 }
-
-# TIAGo-robot (supervisor voor ground-truth)
 Tiago {
   translation 0 0.05 0
   rotation 0 1 0 0
   controller "tiago_controller"
   supervisor TRUE
-  controllerArgs [ ]
 }
-
+DEF WP_A Solid {
+  translation -7.57 1.83 0.05
+  children [
+    Shape {
+      appearance PBRAppearance {
+        transparency 1
+      }
+      geometry Sphere {
+        radius 0.01
+      }
+    }
+  ]
+  name "wp_a"
+}
+DEF WP_B Solid {
+  translation 2 -10.9 0.05
+  children [
+    Shape {
+      appearance PBRAppearance {
+        transparency 1
+      }
+      geometry Sphere {
+        radius 0.01
+      }
+    }
+  ]
+  name "wp_b"
+}
+DEF WP_C Solid {
+  translation -0.53 -3.51 0.05
+  children [
+    Shape {
+      appearance PBRAppearance {
+        transparency 1
+      }
+      geometry Sphere {
+        radius 0.01
+      }
+    }
+  ]
+  name "wp_c"
+}
 Floor {
   translation 0 -4.3 0
   name "floor(1)"
@@ -360,33 +395,6 @@ EmergencyExitSign {
   translation -9.83 -0.01 2.3
   rotation 0.5773489358550934 0.5773519358547601 0.5773499358549823 2.0944
   name "emergency exit sign(1)"
-}
-Solid {
-  translation -9.87 -6.36 4.13
-  rotation 0.7071067811865476 0 0.7071067811865476 3.141592
-  children [
-    Shape {
-      appearance PBRAppearance {
-        baseColor 0.8 0.8 0.8
-        baseColorMap ImageTexture {
-          url [
-            "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/default/worlds/textures/ladybug.png"
-          ]
-          filtering 5
-        }
-        transparency 0.6
-        roughness 0.5
-        metalness 0
-        textureTransform TextureTransform {
-          rotation 1.5708
-        }
-      }
-      geometry Plane {
-        size 5 5
-      }
-    }
-  ]
-  name "solid(3)"
 }
 Solid {
   translation 9.25 -3.95 3.21
