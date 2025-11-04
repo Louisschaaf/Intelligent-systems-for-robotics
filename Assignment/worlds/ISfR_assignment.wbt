@@ -6,16 +6,10 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/apartment_structure/protos/Door.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/appearances/protos/GlossyPaint.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/obstacles/protos/OilBarrel.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/robotis/darwin-op/protos/Darwin-op.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/sony/aibo/protos/AiboErs7.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/pipes/protos/LJoint.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/tools/protos/Wrench.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/tools/protos/Hammer.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/pallet/protos/WoodenPallet.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/tables/protos/Table.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/CardboardBox.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/tools/protos/PaintBucket.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/tools/protos/Screwdriver.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/pallet/protos/WoodenPalletStack.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/containers/protos/WoodenBox.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/factory/valves/protos/LeverValve.proto"
@@ -28,16 +22,16 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/hospital/protos/EmergencyExitSign.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/stairs/protos/StraightStairsRail.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/stairs/protos/StraightStairs.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/Floor.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/pal_robotics/tiago/protos/Tiago.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/fruits/protos/Apple.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/computers/protos/Laptop.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/chairs/protos/OfficeChair.proto"
 
 WorldInfo {
 }
 Viewpoint {
-  orientation 0.20991621131898758 0.5790357422816553 -0.7878152025607368 0.8625410243080257
-  position -8.260560401077061 1.3505004847514672 6.417126969690869
+  orientation -0.6172056833655352 0.1145993395560162 0.7784112896114803 2.854522930770322
+  position 3.0923795250739268 -1.917695343511204 8.155586412361412
 }
 TexturedBackground {
   texture "empty_office"
@@ -53,16 +47,15 @@ PointLight {
   intensity 9.6
   location 5 6 5
 }
-
-# TIAGo-robot (supervisor voor ground-truth)
 Tiago {
   translation 0 0.05 0
-  rotation 0 1 0 0
+  rotation 0 0 1 -1.5707953071795862
   controller "tiago_controller"
   supervisor TRUE
-  controllerArgs [ ]
 }
-
+Apple {
+  translation 0 -4.43 1
+}
 Floor {
   translation 0 -4.3 0
   name "floor(1)"
@@ -70,6 +63,10 @@ Floor {
   tileSize 1 1
   appearance ThreadMetalPlate {
   }
+}
+OfficeChair {
+  translation -1.30769 -3.545 0
+  rotation 0 0 1 -2.6179953071795863
 }
 Door {
   translation 10.04 -4 3.27
@@ -120,16 +117,6 @@ Floor {
     metalness 0
   }
 }
-Darwin-op {
-  translation -0.184108 -4.90072 0.820325
-  rotation -0.6222989795058281 0.45366398505948424 -0.6379129789916121 -2.247155307179586
-  controller "<generic>"
-}
-AiboErs7 {
-  translation 1.1565273 -4.9369095 0.82215018
-  rotation -0.26735092200225136 0.7698527754008746 -0.5795258309274203 2.679
-  controller "<generic>"
-}
 LJoint {
   translation -7.571 3.19 0.712
   rotation 0 0 1 -1.5708
@@ -138,24 +125,6 @@ LJoint {
 LJoint {
   translation -7.571 3.277 2.422
   rotation -0.577350278331609 0.577350264618634 0.577350264618634 2.094395086923155
-}
-Wrench {
-  translation -0.35779017 -4.3479161 0.74
-  rotation 0 0 1 -1.5707953071795862
-  name "wrench(1)"
-}
-Wrench {
-  translation 0.8606647 -4.6966955 0.74
-  rotation 0 0 1 -2.565635307179586
-}
-Hammer {
-  translation -0.807916 -4.68048 0.754
-  rotation 0 0 1 -2.094395307179586
-  name "hammer(1)"
-}
-Hammer {
-  translation 1.5252822 -4.8882693 0.754
-  rotation 0 0 1 2.35619
 }
 WoodenPallet {
   translation -3.05 -12.1 0.52
@@ -168,14 +137,6 @@ Table {
 CardboardBox {
   translation 2.2324987 -11.807743 0.31
   rotation 0 0 1 -1.5707963267948966
-}
-PaintBucket {
-  translation -0.72150306 -5.1778419 0.74
-  rotation 0 0 1 1.0472
-}
-Screwdriver {
-  translation -0.054863304 -5.1915357 0.752
-  rotation 0.37796390461552926 0.6546538347889604 0.6546538347889604 2.41886
 }
 WoodenPalletStack {
   translation -6.8424942 -11.754332 0
@@ -488,4 +449,8 @@ StraightStairs {
       }
     }
   ]
+}
+Laptop {
+  translation -1.84999 -4.31 0.74
+  rotation 0 0 1 1.5708
 }
