@@ -7,7 +7,7 @@ centralWidgetVisible: 1
 orthographicViewHeight: 1
 textFiles: 0 "worlds/ISfR_assignment.wbt"
 consoles: Console:All:All
-renderingDevicePerspectives: DARwIn-OP:Camera;1;1;0;0
-renderingDevicePerspectives: ERS-7:PRM:/r1/c1/c2/c3/i1-FbkImageSensor:F1;1;1;0;0
-renderingDevicePerspectives: TIAGo:Astra depth;1;0.466667;0;0
-renderingDevicePerspectives: TIAGo:Astra rgb;1;0.0666667;0;0
+renderingDevicePerspectives: DARwIn-OP:Camera;0;0.836859;0.6337;0.0850622
+renderingDevicePerspectives: ERS-7:PRM:/r1/c1/c2/c3/i1-FbkImageSensor:F1;0;1;0.0818071;0.26971
+renderingDevicePerspectives: TIAGo:Astra depth;0;0.466667;0.001221;0.0165975
+renderingDevicePerspectives: TIAGo:Astra rgb;1;0.441284;0.021606;0.772536

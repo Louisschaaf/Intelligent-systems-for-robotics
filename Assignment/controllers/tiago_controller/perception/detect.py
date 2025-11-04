@@ -1,51 +1,65 @@
-# Volledige, minimale stub: geeft ground-truth pose van DEF-nodes terug.
 from controller import Supervisor
-from controller import Camera
 from ultralytics import YOLO
 import numpy as np
 import cv2
 
 class CameraDetection:
-    def __init__(self, robot: Supervisor, camera_def: str):
+    def __init__(self, robot: Supervisor, camera_name: str = "Astra", model_path: str = "yolo11n.pt"):
         self.robot = robot
-        self.camera_def = camera_def
-        self.camera = robot.getDevice("Astra rgb")
-        self.camera_width = self.camera.getWidth()
-        self.camera_height = self.camera.getHeight()
+        self.camera = robot.getDevice(camera_name)
         if self.camera is None:
-            raise RuntimeError(f"Camera met DEF {camera_def} niet gevonden.")
-        self.model = YOLO("yolo11n.pt")
+            raise RuntimeError(f"Camera device '{camera_name}' niet gevonden.")
+        self.model = YOLO(model_path)
+        self.width = None
+        self.height = None
+        self._frame = None
+        self._detections = []
+        self._tick = 0
+
+        # Pak klassennamen dynamisch uit het model (beter dan vaste COCO-map):
+        # self.model.names is bij Ultralytics een dict: {id: "classname"}
+        self.id2name = {int(k): v for k, v in getattr(self.model, "names", {}).items()}
 
     def enable(self, timestep: int):
         self.camera.enable(timestep)
+        self.width = self.camera.getWidth()
+        self.height = self.camera.getHeight()
 
     def get_image(self):
-        img = np.frombuffer(self.camera.getImage(), np.uint8).reshape((self.camera_height, self.camera_width, 4))
+        buf = self.camera.getImage()
+        if buf is None:
+            return None
+        img = np.frombuffer(buf, np.uint8).reshape((self.height, self.width, 4))
         img_bgr = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
+        self._frame = img_bgr
         return img_bgr
 
-    def get_pose_from_def(self, def_name: str):
-        node = self.robot.getFromDef(def_name)
-        if node is None:
-            raise RuntimeError(f"DEF {def_name} niet gevonden.")
-        return node.getPosition(), node.getOrientation()
-    
-    def detect_objects(self):
-        image = self.get_image()
-        results = self.model(image)
-        detections = []
-        for result in results:
-            for box in result.boxes:
-                detections.append({
-                    "class": box.cls,
-                    "confidence": box.conf,
-                    "bbox": box.xyxy
-                })
-        return detections
-    
-    def detect_object(self, name: str):
-        detections = self.detect_objects()
-        for detection in detections:
-            if detection["class"] == name:
-                return detection
-        return None
+    def _run_yolo(self):
+        if self._frame is None:
+            return []
+        results = self.model(self._frame, verbose=False)
+        out = []
+        for r in results:
+            if not hasattr(r, "boxes") or r.boxes is None:
+                continue
+            for b in r.boxes:
+                cls_id = int(b.cls[0])
+                name = self.id2name.get(cls_id, str(cls_id))
+                conf = float(b.conf[0]) if b.conf is not None else 0.0
+                xyxy = b.xyxy[0].tolist()
+                out.append({"class_id": cls_id, "class_name": name, "confidence": conf, "bbox_xyxy": xyxy})
+        return out
+
+    def detect_objects(self, every_n_frames: int = 3):
+        self._tick += 1
+        if self._tick % every_n_frames == 0:
+            self._detections = self._run_yolo()
+        return self._detections
+
+    def detect_object(self, class_name: str):
+        class_name = class_name.lower().strip()
+        dets = self.detect_objects()
+        matches = [d for d in dets if d["class_name"].lower() == class_name]
+        if not matches:
+            return None
+        return max(matches, key=lambda d: d["confidence"])

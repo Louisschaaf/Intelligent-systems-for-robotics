@@ -1,30 +1,39 @@
 from controller import Supervisor
-from skills.follow import FollowSkill
 from knowledge.kg import KG
+from planning.pddl_problem import ProblemBuilder
+from planning.planner import Planner
+from exec.executor import Executor
 from perception.detect import CameraDetection
 
 def main():
     robot = Supervisor()
     timestep = int(robot.getBasicTimeStep())
+
     kg = KG()
-    camera = CameraDetection(robot, "Astra")
-    camera.enable(timestep)
+    cam = CameraDetection(robot, "Astra")
+    cam.enable(timestep)
 
-    # TIAGo moet supervisor zijn in je .wbt
     me = robot.getSelf()
-    if me is None:
-        raise RuntimeError("Zet 'supervisor TRUE' op de Tiago node in je world.")
 
-    # Start de follow-skill: volg DEF TARGET
-    skill = FollowSkill(robot=robot, kg=kg, target_def="TARGET")
-    skill.setup()
+    executor = Executor(robot=robot, kg=kg)
+    planner  = Planner()
+
+    goal = {"type": "move", "place": "room2"}  # start simpel; later place_on
 
     while robot.step(timestep) != -1:
-        camera.get_image()
-        skill.step()
-        detection = camera.detect_object("chair")
-        if detection:
-            print("Gevonden stoel:", detection)
+        # 1) Perception
+        cam.get_image()
+        kg.assert_robot_at("tiago", kg.map_position_to_area(me.getPosition()))
+
+        # 2) Planning trigger
+        if executor.needs_plan():
+            pb = ProblemBuilder(kg, goal)
+            domain, problem = pb.build()
+            plan = planner.solve(domain, problem)
+            executor.set_plan(plan)
+
+        # 3) Execute
+        executor.step()
 
 if __name__ == "__main__":
     main()
