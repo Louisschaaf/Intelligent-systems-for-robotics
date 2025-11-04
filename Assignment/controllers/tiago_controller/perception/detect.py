@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 
 class CameraDetection:
-    def __init__(self, robot: Supervisor, camera_name: str = "Astra", model_path: str = "yolo11n.pt"):
+    def __init__(self, robot: Supervisor, camera_name: str = "Astra rgb", model_path: str = "yolo11n.pt"):
         self.robot = robot
         self.camera = robot.getDevice(camera_name)
         if self.camera is None:

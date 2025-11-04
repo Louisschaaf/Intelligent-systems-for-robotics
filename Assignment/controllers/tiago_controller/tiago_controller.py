@@ -10,7 +10,7 @@ def main():
     timestep = int(robot.getBasicTimeStep())
 
     kg = KG()
-    cam = CameraDetection(robot, "Astra")
+    cam = CameraDetection(robot, "Astra rgb")
     cam.enable(timestep)
 
     me = robot.getSelf()
