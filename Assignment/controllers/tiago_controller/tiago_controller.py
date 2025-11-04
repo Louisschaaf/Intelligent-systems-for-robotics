@@ -4,6 +4,7 @@ from planning.pddl_problem import ProblemBuilder
 from planning.planner import Planner
 from exec.executor import Executor
 from perception.detect import CameraDetection
+from perception.lidar import Lidar
 
 def main():
     robot = Supervisor()
@@ -12,6 +13,9 @@ def main():
     kg = KG()
     cam = CameraDetection(robot, "Astra rgb")
     cam.enable(timestep)
+
+    lidar = Lidar(robot, "Hokuyo URG-04LX-UG01")
+    lidar.enable(timestep)
 
     me = robot.getSelf()
 
@@ -24,7 +28,8 @@ def main():
         # 1) Perception
         cam.get_image()
         kg.assert_robot_at("tiago", kg.map_position_to_area(me.getPosition()))
-
+        lidar.visualize_2d()
+        
         # 2) Planning trigger
         if executor.needs_plan():
             pb = ProblemBuilder(kg, goal)
