@@ -9,7 +9,6 @@ from perception.lidar import Lidar
 def main():
     robot = Supervisor()
     timestep = int(robot.getBasicTimeStep())
-
     # --- Perception devices ---
     cam = CameraDetection(robot, camera_name="Astra rgb", model_path="yolo11n.pt")
     cam.enable(timestep)
@@ -55,9 +54,11 @@ def main():
         if tick % 5 == 0:
             lidar.visualize_2d()
 
+        print(f"Min distance to all objects: {cam.get_min_distance()} meters")
+
         # 2) Replanning indien nodig (hier niet verwacht: pad is statisch)
         if executor.needs_plan():
-            # In dit A->B->C scenario normaal niet nodig, maar contract blijven respecteren
+            #  In dit A->B->C scenario normaal niet nodig, maar contract blijven respecteren
             domain_path, problem_path = pb.build_from_path()
             plan = planner.solve(domain_path, problem_path)
             executor.set_plan(plan)

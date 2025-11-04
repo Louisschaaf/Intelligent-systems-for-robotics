@@ -4,12 +4,15 @@ import numpy as np
 import cv2
 
 class CameraDetection:
-    def __init__(self, robot: Supervisor, camera_name: str = "Astra rgb", model_path: str = "yolo11n.pt"):
+    def __init__(self, robot: Supervisor, camera_name: str = "Astra rgb", model_path: str = "yolo11n.pt", range_finder_name: str = "Astra depth"):
         self.robot = robot
         self.camera = robot.getDevice(camera_name)
         if self.camera is None:
             raise RuntimeError(f"Camera device '{camera_name}' niet gevonden.")
         self.model = YOLO(model_path)
+        self.range_finder = robot.getDevice(range_finder_name)
+        if self.range_finder is None:
+            raise RuntimeError(f"RangeFinder device '{range_finder_name}' niet gevonden.")
         self.width = None
         self.height = None
         self._frame = None
@@ -24,6 +27,8 @@ class CameraDetection:
         self.camera.enable(timestep)
         self.width = self.camera.getWidth()
         self.height = self.camera.getHeight()
+        self.range_finder.enable(timestep)
+
 
     def get_image(self):
         buf = self.camera.getImage()
@@ -63,3 +68,29 @@ class CameraDetection:
         if not matches:
             return None
         return max(matches, key=lambda d: d["confidence"])
+    
+    def get_distance_to_object(self, detection: dict):
+        if detection is None or self.range_finder is None:
+            return None
+        x1, y1, x2, y2 = map(int, detection["bbox_xyxy"])
+        cx = round((x1 + x2) / 2)
+        cy = round((y1 + y2) / 2)
+        depth_buf = self.range_finder.getRangeImage()
+        if depth_buf is None:
+            return None
+        depth_image = np.array(depth_buf, dtype=np.float32).reshape((self.range_finder.getHeight(), self.range_finder.getWidth()))
+        if 0 <= cy < depth_image.shape[0] and 0 <= cx < depth_image.shape[1]:
+            distance = depth_image[cy, cx]
+            return float(distance)
+        return None
+    
+    # function to check the depth of the whole camera view and returns the minimum distance
+    def get_min_distance(self):
+        if self.range_finder is None:
+            return None
+        depth_buf = self.range_finder.getRangeImage()
+        if depth_buf is None:
+            return None
+        depth_image = np.array(depth_buf, dtype=np.float32).reshape((self.range_finder.getHeight(), self.range_finder.getWidth()))
+        min_distance = np.min(depth_image)
+        return float(min_distance)
