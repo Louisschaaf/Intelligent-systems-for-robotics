@@ -1,0 +1,44 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/adept/pioneer3/protos/Pioneer3dx.proto"
+
+WorldInfo {
+}
+Viewpoint {
+  orientation 0.260317754613374 0.49568313163653144 -0.8285728088973546 1.1340941710753643
+  position -3.2588818501734296 6.332297362338079 4.945207414132947
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 7.5 7.5
+  wallHeight 0.75
+}
+Pioneer3dx {
+  controller "mapping_controller"
+  extensionSlot [
+    Display {
+      name "display"
+      width 256
+      height 256
+    }
+    GPS {
+      name "gps"
+    }
+    Compass {
+      name "compass"
+    }
+    Lidar {
+      name "lidar"
+      translation 0 0 0.08
+      verticalFieldOfView 0.001
+      numberOfLayers 1
+      maxRange 5
+    }
+  ]
+}
