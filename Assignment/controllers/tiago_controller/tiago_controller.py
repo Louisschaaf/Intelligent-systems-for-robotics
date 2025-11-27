@@ -1,95 +1,95 @@
-from controller import Supervisor
+from controller import Supervisor, Keyboard
 from knowledge.kg import KG
-from planning.pddl_problem import ProblemBuilder
-from planning.planner import Planner
-from exec.executor import Executor
 from perception.detect import CameraDetection
 from perception.lidar import Lidar
 import numpy as np
-
+from skills.grasp import GraspSkill
+from skills.head_follow import HeadFollowSkill
 
 def main():
     robot = Supervisor()
     timestep = int(robot.getBasicTimeStep())
 
-    # --- Perception devices ---
+    # --- Keyboard ---
+    kb = robot.getKeyboard()
+    kb.enable(timestep)
+
+    # --- Perception (mag blijven werken) ---
     cam = CameraDetection(robot, camera_name="Astra rgb", model_path="yolo11n.pt")
     cam.enable(timestep)
 
-    # LiDAR: offset in het horizontale vlak in het robotframe
-    # (hier gebruik je dus alleen de horizontale componenten van je 3D-offset)
+    # --- Skills ---
+    grasp = GraspSkill(robot, cam)
+    head_follow = HeadFollowSkill(robot, cam)
+
     lidar = Lidar(
         robot,
         lidar_def="Hokuyo URG-04LX-UG01",
-        lidar_offset=(0.202, 0.0)    # eventueel aanpassen naar (0.202, 0.286) afhankelijk van je assenkeuze
+        lidar_offset=(0.202, 0.0)
     )
     lidar.enable(timestep)
 
-    # Zoek de Lidar-node op basis van de DEF-naam (zonder spaties!)
-    # 1) Haal de TIAGo-robot op (DEF-naam in de Scene Tree)
+    # --- Lidar hoogte fixen ---
     tiago_node = robot.getFromDef("TIAGo")
-    if tiago_node is None:
-        raise RuntimeError("Robot node met DEF 'TIAGo' niet gevonden.")
-
-    # 2) Pak het 'lidarSlot' field (MFNode)
     lidar_slot_field = tiago_node.getField("lidarSlot")
-    if lidar_slot_field is None:
-        raise RuntimeError("Field 'lidarSlot' niet gevonden in TIAGo-node.")
-
-    # 3) In lidarSlot[0] zit jouw HokuyoUrg04lxug01-node
     lidar_node = lidar_slot_field.getMFNode(0)
-    if lidar_node is None:
-        raise RuntimeError("Geen LiDAR-node gevonden in 'lidarSlot'.")
-
     translation_field = lidar_node.getField("translation")
-    if translation_field is None:
-        raise RuntimeError("Lidar node heeft geen 'translation' field.")
-
-    # Huidige translation uitlezen
     x, y, z = translation_field.getSFVec3f()
-    # 0.29 m hoger langs de hoogterichting (bij jou z)
     translation_field.setSFVec3f([x, y, z + 0.29])
 
-    # --- Knowledge graph / planning / executor zoals jij die had ---
-    kg = KG()
-    kg.add_waypoint("wp_a", "WP_A")
-    kg.add_waypoint("wp_b", "WP_B")
-    kg.add_waypoint("wp_c", "WP_C")
-    kg.set_path(["wp_a", "wp_b", "wp_c"])
+    # --- Motors ophalen ---
+    left_motor  = robot.getDevice("wheel_left_joint")
+    right_motor = robot.getDevice("wheel_right_joint")
 
-    executor = Executor(robot=robot, kg=kg)
-    planner  = Planner()
+    left_motor.setPosition(float("inf"))
+    right_motor.setPosition(float("inf"))
 
-    domain_path_hint = "controllers/tiago_controller/planning/pddl_domain.pddl"
-    pb = ProblemBuilder(kg, domain_path=domain_path_hint)
-    domain_path, problem_path = pb.build_from_path()
+    left_motor.setVelocity(0.0)
+    right_motor.setVelocity(0.0)
 
-    plan = planner.solve(domain_path, problem_path)
-    executor.set_plan(plan)
+    print("Keyboard control active.")
 
-    tick = 0
+    v_forward = 5.0     # vooruit snelheid
+    v_turn    = 3.0     # draaiverschil
+
     while robot.step(timestep) != -1:
-        tick += 1
 
-        # 1) Perception
+        # --- Perception blijft draaien ---
         cam.get_image()
-        if tick % 3 == 0:
-            _ = cam.detect_objects()
-
         lidar.update_global_map()
-        lidar.visualize_global_map(xlim=(-15, 15), ylim=(-15, 15))
 
-        print(f"Min distance to all objects: {cam.get_min_distance()} meters")
+        # --- Keyboard lezen ---
+        key = kb.getKey()
 
-        # 2) Replanning indien nodig
-        if executor.needs_plan():
-            domain_path, problem_path = pb.build_from_path()
-            plan = planner.solve(domain_path, problem_path)
-            executor.set_plan(plan)
+        if key == ord('G'):
+            grasp.execute("apple")
 
-        # 3) Planstap uitvoeren
-        executor.step()
+        if head_follow.track("apple"):
+            # print("Tracking apple...")
+            True
+
+
+        v_l = 0.0
+        v_r = 0.0
+
+        if key == Keyboard.UP:
+            v_l = v_forward
+            v_r = v_forward
+        elif key == Keyboard.DOWN:
+            v_l = -v_forward
+            v_r = -v_forward
+        elif key == Keyboard.LEFT:
+            v_l = -v_turn
+            v_r =  v_turn
+        elif key == Keyboard.RIGHT:
+            v_l =  v_turn
+            v_r = -v_turn
+
+        # --- Motors aansturen ---
+        left_motor.setVelocity(v_l)
+        right_motor.setVelocity(v_r)
 
 
 if __name__ == "__main__":
     main()
+
