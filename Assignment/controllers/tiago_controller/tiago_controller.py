@@ -5,6 +5,8 @@ from perception.lidar import Lidar
 import numpy as np
 from skills.grasp import GraspSkill
 from skills.head_follow import HeadFollowSkill
+from skills.approach import ApproachSkill
+
 
 def main():
     robot = Supervisor()
@@ -21,6 +23,7 @@ def main():
     # --- Skills ---
     grasp = GraspSkill(robot, cam)
     head_follow = HeadFollowSkill(robot, cam)
+    approach = ApproachSkill(robot, cam, target_distance=0.4)
 
     lidar = Lidar(
         robot,
@@ -54,40 +57,40 @@ def main():
 
     while robot.step(timestep) != -1:
 
-        # --- Perception blijft draaien ---
         cam.get_image()
         lidar.update_global_map()
-
-        # --- Keyboard lezen ---
         key = kb.getKey()
 
+        # --- Skills ---
         if key == ord('G'):
             grasp.execute("apple")
 
-        if head_follow.track("apple"):
-            # print("Tracking apple...")
-            True
+        head_follow.track("apple")   
 
+        approaching = False
+        approaching = approach.approach("apple")
 
-        v_l = 0.0
-        v_r = 0.0
+        # --- Keyboard control ---
+        if not approaching:
+            v_l = 0.0
+            v_r = 0.0
 
-        if key == Keyboard.UP:
-            v_l = v_forward
-            v_r = v_forward
-        elif key == Keyboard.DOWN:
-            v_l = -v_forward
-            v_r = -v_forward
-        elif key == Keyboard.LEFT:
-            v_l = -v_turn
-            v_r =  v_turn
-        elif key == Keyboard.RIGHT:
-            v_l =  v_turn
-            v_r = -v_turn
+            if key == Keyboard.UP:
+                v_l = v_forward
+                v_r = v_forward
+            elif key == Keyboard.DOWN:
+                v_l = -v_forward
+                v_r = -v_forward
+            elif key == Keyboard.LEFT:
+                v_l = -v_turn
+                v_r =  v_turn
+            elif key == Keyboard.RIGHT:
+                v_l =  v_turn
+                v_r = -v_turn
 
-        # --- Motors aansturen ---
-        left_motor.setVelocity(v_l)
-        right_motor.setVelocity(v_r)
+            left_motor.setVelocity(v_l)
+            right_motor.setVelocity(v_r)
+
 
 
 if __name__ == "__main__":
