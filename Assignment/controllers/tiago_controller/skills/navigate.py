@@ -1,12 +1,15 @@
-# navigate.py
 import math
 from controller import Supervisor, Motor
 from knowledge.kg import KG
 
+# De CameraDetection klasse wordt aangenomen dat deze beschikbaar is in de hoofdcontroller,
+# zoals in je main() functie.
+
 class NavigateSkill:
-    def __init__(self, robot: Supervisor, kg: KG):
+    def __init__(self, robot: Supervisor, kg: KG, cam_detection):
         self.robot = robot
         self.kg = kg
+        self.cam = cam_detection # CameraDetection instantie
         self.left_motor = self.right_motor = None
         self.me = None
         self.current_goal_place = None
@@ -18,17 +21,25 @@ class NavigateSkill:
         self.turn_speed     = 1.2
         self.k_r            = 0.8
         self.k_th           = 1.2
+        
+        # Parameters voor veiligheidsvertraging op basis van diepte
+        self.safe_distance     = 0.40 # Minimale afstand waarop nog heel langzaam mag worden gereden
+        self.max_slow_distance = 1.00 # Afstand waarboven de snelheid NIET wordt beperkt
 
         self.wheel_radius   = 0.0625
         self.axle_length    = 0.40
         self.max_wheel_speed = 8.0
 
         # tuning switches
-        self.forward_axis = "x"    # zet op "y" als lokale Y bij jou 'vooruit' is
-        self.invert_omega = False  # omkeer draaiteken indien nodig
-        self.swap_wheels  = False  # wissel L/R indien bekabeling/namen omgekeerd zijn
+        self.forward_axis = "x"
+        self.invert_omega = False 
+        self.swap_wheels  = False 
 
     def setup(self):
+        """
+        FIX: Deze methode was de oorzaak van de AttributeError. 
+        Initialiseert de robot node en detecteert de wielmotoren.
+        """
         self.me = self.robot.getSelf()
         self.left_motor, self.right_motor = self._detect_wheels()
         if not self.left_motor or not self.right_motor:
@@ -47,28 +58,60 @@ class NavigateSkill:
         self.goal_xy = (x, y)
 
     def step(self):
+        # ... (De volledige stap-logica die je meestuurde, inclusief V_safe) ...
         if not self.goal_xy:
             return "failed"
 
-        rpos = self.me.getPosition()         # (x,y,z)
-        rrot = self.me.getOrientation()      # 3x3 flatten (len=9)
+        rpos = self.me.getPosition()         
+        rrot = self.me.getOrientation()      
         yaw = self._yaw_from_R_z_up(rrot, self.forward_axis)
 
         gx, gy = self.goal_xy
         dx, dy = gx - rpos[0], gy - rpos[1]
         dist = math.hypot(dx, dy)
+        
         if dist <= self.stop_distance:
             self.left_motor.setVelocity(0.0)
             self.right_motor.setVelocity(0.0)
             return "done"
 
-        heading_des = math.atan2(dy, dx)     # 2D op x–y
+        heading_des = math.atan2(dy, dx)     
         heading_err = self._wrap_pi(heading_des - yaw)
 
-        v  = self._clamp(self.k_r  * dist,        -self.approach_speed, self.approach_speed)
-        om = self._clamp(self.k_th * heading_err, -self.turn_speed,     self.turn_speed)
+        # ----------------------------------------------------
+        # STAP 1: Bepaal de maximale gewenste snelheid (V_goal)
+        # ----------------------------------------------------
+        v_goal  = self._clamp(self.k_r  * dist, 0.0, self.approach_speed)
+        
+        # ----------------------------------------------------
+        # STAP 2: Bepaal de maximale veilige snelheid (V_safe)
+        # ----------------------------------------------------
+        v_safe = self.approach_speed
+        min_dist = self.cam.get_min_distance()
+
+        if min_dist is not None:
+            if min_dist < self.max_slow_distance:
+                d = self._clamp(min_dist, self.safe_distance, self.max_slow_distance)
+                range_size = self.max_slow_distance - self.safe_distance
+                if range_size > 0:
+                    scale_factor = (d - self.safe_distance) / range_size
+                    v_safe = self.approach_speed * scale_factor
+                else:
+                    v_safe = 0.1 * self.approach_speed 
+
+        # ----------------------------------------------------
+        # STAP 3 & 4: Eind V-snelheid en Rotatie (Omega)
+        # ----------------------------------------------------
+        v = min(v_goal, v_safe) 
+        om = self._clamp(self.k_th * heading_err, -self.turn_speed, self.turn_speed)
+        
+        # Optioneel: Stop met draaien als je een obstakel TE dichtbij hebt
+        if min_dist is not None and min_dist < self.safe_distance:
+             om = 0.0 # Stop zowel V als Omega als te dichtbij
+
         if self.invert_omega: om = -om
 
+        # ... (Kinematica en motoraansturing) ...
         wl, wr = self._vw_to_wheels(v, om)
         if self.swap_wheels: wl, wr = wr, wl
 
@@ -77,9 +120,10 @@ class NavigateSkill:
         self.left_motor.setVelocity(wl)
         self.right_motor.setVelocity(wr)
         return "busy"
-
-    # helpers
+    
+    # --- HELPERS (Uit eerdere correcties) ---
     def _detect_wheels(self):
+        """FIX: Deze methode moest in de klasse staan voor setup()."""
         left = right = None
         for i in range(self.robot.getNumberOfDevices()):
             d = self.robot.getDeviceByIndex(i)
@@ -102,9 +146,9 @@ class NavigateSkill:
     def _yaw_from_R_z_up(R, forward_axis="x"):
         r00,r01,r02, r10,r11,r12, r20,r21,r22 = R
         if forward_axis == "x":
-            return math.atan2(r10, r00)  # yaw = atan2(R[1,0], R[0,0])
+            return math.atan2(r10, r00)
         else:
-            return math.atan2(r11, r01)  # alternatief: lokale Y is vooruit
+            return math.atan2(r11, r01)
 
     @staticmethod
     def _wrap_pi(a): return (a + math.pi) % (2*math.pi) - math.pi
